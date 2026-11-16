@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard · {app}</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="index.html" data-app-name></a>
+    <nav><button id="sign-out" class="hidden">Sign out</button></nav>
+  </header>
+
+  <main>
+    <p id="banner" class="note hidden"></p>
+
+    <!-- Signed out -->
+    <section class="card hidden" id="sign-in" style="max-width:520px">
+      <h2>Owner sign in</h2>
+      <label>Mobile number <input data-phone type="tel" autocomplete="tel" inputmode="tel" placeholder="(515) 555-0123"></label>
+      <button data-send class="primary">Text me a code</button>
+      <div data-code-step class="hidden" style="display:grid;gap:12px">
+        <label>Code <input data-code inputmode="numeric" autocomplete="one-time-code" maxlength="6"></label>
+        <button data-verify class="primary">Sign in</button>
+      </div>
+      <p data-note class="note hidden"></p>
+      <p class="small">New here? <a href="signup.html">Sign up your business</a>.</p>
+    </section>
+
+    <!-- Signed in, but nothing to manage here -->
+    <section class="card hidden" id="no-access">
+      <h2 id="no-access-title"></h2>
+      <p class="dim" id="no-access-body"></p>
+      <a class="button primary hidden" id="no-access-signup" href="signup.html">Sign up your business</a>
+    </section>
+
+    <!-- The owner's dashboard -->
+    <div id="dash" class="hidden" style="display:grid;gap:16px">
+      <h1 id="company-name"></h1>
+
+      <section class="card" aria-labelledby="h-plan">
+        <div class="row between">
+          <h2 id="h-plan">Subscription</h2>
+          <span id="status-tag" class="tag"></span>
+        </div>
+        <dl class="facts hidden" id="plan-facts">
+          <div><dt>Trucks billed</dt><dd id="f-billed"></dd></div>
+          <div><dt>Paused</dt><dd id="f-paused"></dd></div>
+          <div><dt>Price per truck</dt><dd id="f-price"></dd></div>
+          <div><dt>Next charge</dt><dd id="f-next"></dd></div>
+        </dl>
+        <p class="dim" id="plan-line"></p>
+        <div class="row">
+          <button id="portal">Manage billing</button>
+          <button id="cancel" class="hidden">Cancel subscription</button>
+          <a class="button primary hidden" id="resubscribe" href="signup.html">Restart subscription</a>
+        </div>
+        <p class="small" id="plan-help">Manage billing opens Stripe, where you update your card and see invoices. Cancel subscription goes straight to the cancel step. No call, no email, no notice period.</p>
+        <form id="add-trucks" class="row" style="align-items:flex-end">
+          <label class="grow">Add trucks to your plan <input id="add-count" type="number" min="1" max="50" value="1" inputmode="numeric"></label>
+          <button class="primary">Add and pay</button>
+        </form>
+        <p class="small" id="add-explain"></p>
+        <p id="plan-note" class="note hidden"></p>
+      </section>
+
+      <section class="card" aria-labelledby="h-trucks">
+        <h2 id="h-trucks">Trucks</h2>
+        <div class="list" id="trucks"></div>
+        <form id="new-truck" class="row" style="align-items:flex-end">
+          <label class="grow">New truck name <input id="truck-name" maxlength="60" placeholder="Truck 3" required></label>
+          <button>Add truck</button>
+        </form>
+        <p class="small">A truck shows on the map once its tracker is paired. Pairing uses one of the trucks you pay for. Parking one for the season? Pause it: a paused truck is free and keeps its tracker.</p>
+        <p id="trucks-note" class="note hidden"></p>
+      </section>
+
+      <section class="card" aria-labelledby="h-team">
+        <h2 id="h-team">Team</h2>
+        <div class="list" id="team"></div>
+        <form id="invite" class="row" style="align-items:flex-end">
+          <label class="grow">Name <input id="invite-name" maxlength="80" required></label>
+          <label class="grow">Mobile number <input id="invite-phone" type="tel" inputmode="tel" required placeholder="(515) 555-0123"></label>
+          <label style="flex:0 0 150px">Role <select id="invite-role"><option value="crew">Crew</option><option value="dispatcher">Dispatcher</option></select></label>
+          <button>Invite</button>
+        </form>
+        <p class="small">Inviting is free and unlimited. They download the app and sign in with that number.</p>
+        <p id="team-note" class="note hidden"></p>
+      </section>
+
+      <section class="card" aria-labelledby="h-ship">
+        <h2 id="h-ship">Tracker shipments</h2>
+        <div class="list" id="shipments"></div>
+      </section>
+
+      <section class="card hidden" id="records" aria-labelledby="h-records">
+        <h2 id="h-records">Your records</h2>
+        <p class="dim" id="records-line">Everything your trucks have recorded is yours. Download it as a spreadsheet file any time.</p>
+        <div class="chips" id="export-range" role="group" aria-label="Period">
+          <button type="button" data-range="year">This year</button>
+          <button type="button" data-range="last-year">Last year</button>
+          <button type="button" data-range="30">Last 30 days</button>
+        </div>
+        <form id="export" class="row" style="align-items:flex-end">
+          <label class="grow">Record <select id="export-kind">
+            <option value="mileage">Mileage log</option>
+            <option value="trips">Trips</option>
+            <option value="job_visits">Job visits</option>
+            <option value="service">Service records</option>
+            <option value="fuel">Fuel receipts</option>
+          </select></label>
+          <label class="grow">From <input id="export-from" type="date" required></label>
+          <label class="grow">To <input id="export-to" type="date" required></label>
+          <button class="primary" id="export-go">Download</button>
+        </form>
+        <p id="records-note" class="note hidden"></p>
+      </section>
+
+      <section class="card" aria-labelledby="h-app">
+        <h2 id="h-app">Get the app</h2>
+        <p class="dim">You and your crew sign in to the app with your mobile numbers.</p>
+        <div class="row">
+          <a class="button hidden" id="ios-link">Download for iPhone</a>
+          <a class="button hidden" id="android-link">Download for Android</a>
+        </div>
+        <p class="small hidden" id="app-soon">App download links will appear here.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span id="support-line"></span>
+    <a href="privacy.html">Privacy</a>
+  </footer>
+
+  <script src="config.js"></script>
+  <script type="module">
+    import { $, billing, config, download, el, membership, money, phoneSignIn, prettyPhone, setNote, show, supabase, supportLine, toE164 } from './shared.js';
+
+    const params = new URLSearchParams(location.search);
+    let me = null;
+    let prices = null;
+
+    const STATUS = {
+      active: ['Active', 'good'],
+      past_due: ['Payment failed, retrying', 'warn'],
+      inactive: ['Inactive', 'bad'],
+    };
+    const TRACKER = { new: ['Waiting for first signal', ''], online: ['Online', 'good'], offline: ['Asleep or out of range', ''], unplugged: ['Unplugged', 'bad'] };
+    const SHIPMENT = { pending: ['Getting ready', ''], shipped: ['Shipped', 'good'], delivered: ['Delivered', 'good'], cancelled: ['Cancelled', 'bad'] };
+
+    const tag = ([text, tone]) => el('span', { class: `tag ${tone}` }, text);
+    /** Fill a list. (Passing an empty entry straight to replaceChildren would print the word "null".) */
+    const fill = (node, ...children) => node.replaceChildren(...children.flat().filter(Boolean));
+    const day = (iso) => new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+    const shortDay = (ms) => new Date(ms).toLocaleDateString([], { month: 'short', day: 'numeric' });
+    const days = (n) => `${n} ${n === 1 ? 'day' : 'days'}`;
+    const isoDay = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    // ── Which screen ─────────────────────────────────────────────────────────
+    async function route() {
+      const { data } = await supabase.auth.getSession();
+      show($('sign-in'), !data.session);
+      show($('sign-out'), Boolean(data.session));
+      show($('no-access'), false);
+      show($('dash'), false);
+      if (!data.session) return;
+
+      try {
+        me = await membership();
+      } catch (e) {
+        return setNote($('banner'), e.message);
+      }
+      if (!me) return noAccess('No company on this number yet', 'Sign up your business to get started. If your boss invited you, use the app instead.', true);
+      if (me.role !== 'owner') return noAccess(`You're on ${me.company.name}'s team`, 'Billing and setup are for the account owner. Everything you need is in the app.', false);
+
+      show($('dash'));
+      await render();
+    }
+
+    function noAccess(title, body, signup) {
+      $('no-access-title').textContent = title;
+      $('no-access-body').textContent = body;
+      show($('no-access-signup'), signup);
+      show($('no-access'));
+    }
+
+    // ── Dashboard ────────────────────────────────────────────────────────────
+    async function render() {
+      me = await membership();
+      const co = me.company;
+      const live = co.status !== 'inactive';
+      $('company-name').textContent = co.name;
+      $('status-tag').replaceWith(Object.assign(tag(STATUS[co.status]), { id: 'status-tag' }));
+
+      const [vehicles, devices, team, shipments, pauses, plan] = live
+        ? await Promise.all([
+            supabase.from('vehicles').select('id, name, plate, status, paused_at').order('name'),
+            supabase.from('devices').select('id, imei, vehicle_id, status, last_seen'),
+            supabase.from('users').select('id, name, phone, role, title, status').neq('status', 'removed').order('created_at'),
+            supabase.from('shipments').select('id, quantity, status, tracking_number, created_at').order('created_at', { ascending: false }),
+            supabase.rpc('pause_status'),
+            billing('summary').catch(() => null), // the plain sentence below stands in if Stripe can't be read
+          ])
+        : [{ data: [] }, { data: [] }, { data: [] }, await supabase.from('shipments').select('id, quantity, status, tracking_number, created_at').order('created_at', { ascending: false }), { data: [] }, null];
+
+      const paired = (devices.data ?? []).filter((d) => d.vehicle_id).length;
+      const pausedCount = (vehicles.data ?? []).filter((v) => v.status === 'paused').length;
+      renderPlan(co, live, plan, paired, pausedCount);
+      show($('resubscribe'), !live);
+      show($('add-trucks'), co.status === 'active');
+      show($('add-explain'), co.status === 'active');
+      for (const id of ['h-trucks', 'h-team']) show($(id).closest('section'), live);
+      explainAdd();
+      renderRecords(co, live);
+      const help = supportLine(me.settings?.support, 'Need a hand?');
+      if (help) $('support-line').replaceChildren(help);
+
+      // Trucks
+      const deviceFor = new Map((devices.data ?? []).filter((d) => d.vehicle_id).map((d) => [d.vehicle_id, d]));
+      const pauseFor = new Map((pauses.data ?? []).map((p) => [p.vehicle_id, p]));
+      fill($('trucks'),
+        (vehicles.data ?? []).map((v) => {
+          const d = deviceFor.get(v.id);
+          const paused = v.status === 'paused';
+          const left = pauseFor.get(v.id)?.days_left ?? null;
+          const imei = el('input', { placeholder: 'Tracker ID (IMEI)', inputmode: 'numeric', 'aria-label': `Tracker ID for ${v.name}`, style: 'max-width:220px' });
+          const status = paused ? tag(['Paused', '']) : d ? tag(TRACKER[d.status]) : el('span', { class: 'small' }, 'No tracker paired');
+          const detail = paused
+            ? `Off your bill since ${day(v.paused_at)}${left === null ? '' : ` · ${days(left)} of pause left this year`}`
+            : d ? `Tracker ${d.imei}` : null;
+          return el('div', { class: 'item' },
+            el('div', { class: 'who' }, el('strong', {}, v.name), status, detail ? el('span', { class: 'small', style: 'display:block' }, detail) : null),
+            d || paused ? null : el('div', { class: 'row' }, imei, el('button', { onclick: () => pair(v.id, imei.value) }, 'Pair')),
+            el('div', { class: 'actions' },
+              paused ? el('button', { class: 'primary', onclick: (e) => resumeTruck(v, e.currentTarget) }, 'Resume')
+                : d && co.status === 'active' ? el('button', { onclick: (e) => pauseTruck(v, left, e.currentTarget) }, 'Pause') : null,
+              el('button', { class: 'danger', onclick: () => removeTruck(v), 'aria-label': `Remove ${v.name} from your plan` }, 'Remove')));
+        }),
+        (vehicles.data ?? []).length === 0 ? el('p', { class: 'dim' }, 'No trucks yet. Add one below.') : null);
+
+      // Team
+      fill($('team'),
+        (team.data ?? []).map((p) =>
+          el('div', { class: 'item' },
+            el('div', { class: 'who' }, el('strong', {}, p.name), el('span', { class: 'small' }, [p.title ?? p.role, p.phone ? prettyPhone(p.phone) : null].filter(Boolean).join(' · '))),
+            tag(p.status === 'no_app' ? ['No app', ''] : p.status === 'invited' ? ['Not signed in yet', 'warn'] : ['Active', 'good']),
+            p.role === 'owner' ? null : el('button', { class: 'danger', onclick: () => removePerson(p) }, 'Remove'))));
+
+      // Shipments
+      fill($('shipments'),
+        (shipments.data ?? []).map((s) =>
+          el('div', { class: 'item' },
+            el('div', { class: 'who' }, el('strong', {}, `${s.quantity} ${s.quantity === 1 ? 'tracker' : 'trackers'}`), el('span', { class: 'small' }, `Ordered ${day(s.created_at)}${s.tracking_number ? ` · Tracking ${s.tracking_number}` : ''}`)),
+            tag(SHIPMENT[s.status]))),
+        (shipments.data ?? []).length === 0 ? el('p', { class: 'dim' }, 'No shipments yet.') : null);
+    }
+
+    // The Subscription card: what you pay for, at what price, and when you're charged next.
+    function renderPlan(co, live, plan, paired, pausedCount) {
+      const facts = live && plan?.active;
+      show($('plan-facts'), Boolean(facts));
+      show($('cancel'), live && !plan?.cancel_at);
+      show($('plan-help'), live);
+      if (!live) {
+        $('plan-line').textContent = 'Your subscription is not active. Your trucks, trips and crew access are locked until it restarts.';
+        return;
+      }
+      if (!facts) {
+        $('plan-line').textContent = `You pay for ${co.truck_limit} ${co.truck_limit === 1 ? 'truck' : 'trucks'}. ${paired} ${paired === 1 ? 'has' : 'have'} a tracker paired.`;
+        return;
+      }
+      const small = (text) => el('small', {}, text);
+      $('f-billed').replaceChildren(String(plan.trucks_billed), small(`${paired - pausedCount} with a tracker paired`));
+      $('f-paused').replaceChildren(String(pausedCount), small(pausedCount ? 'free while paused' : 'none right now'));
+      $('f-price').replaceChildren(plan.price.amount == null ? '—' : money(plan.price.amount, plan.price.currency), small(`each ${plan.price.interval}`));
+      if (plan.cancel_at) $('f-next').replaceChildren('None', small(`ends ${shortDay(plan.cancel_at * 1000)}`));
+      else if (plan.trucks_billed === 0) $('f-next').replaceChildren('Nothing', small('while every truck is paused'));
+      else $('f-next').replaceChildren(
+        plan.next_charge.at ? shortDay(plan.next_charge.at * 1000) : '—',
+        small(plan.next_charge.amount == null ? '' : `${money(plan.next_charge.amount, plan.price.currency)} plus any tax`));
+      $('plan-line').textContent = plan.cancel_at
+        ? `Your subscription ends on ${day(plan.cancel_at * 1000)}. You keep full access until then, and your records stay downloadable for 12 months after.`
+        : 'Your price is locked while you stay subscribed.';
+    }
+
+    // Records: open while subscribed, and for 12 months after cancelling.
+    function renderRecords(co, live) {
+      const until = co.cancelled_at ? new Date(co.cancelled_at) : null;
+      if (until) until.setMonth(until.getMonth() + 12);
+      const open = live || (until && until > new Date());
+      show($('records'), Boolean(open));
+      if (!live && open) $('records-line').textContent = `Your subscription has ended, but your records are still yours. You can download them here until ${day(until)}.`;
+      if (!$('export-from').value) setRange('year');
+    }
+
+    function setRange(range) {
+      const today = new Date();
+      let from = new Date(today.getFullYear(), 0, 1);
+      let to = today;
+      if (range === 'last-year') { from = new Date(today.getFullYear() - 1, 0, 1); to = new Date(today.getFullYear() - 1, 11, 31); }
+      if (range === '30') from = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 29);
+      $('export-from').value = isoDay(from);
+      $('export-to').value = isoDay(to);
+      for (const b of $('export-range').querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.range === range));
+    }
+    $('export-range').addEventListener('click', (e) => { if (e.target.dataset.range) setRange(e.target.dataset.range); });
+    for (const id of ['export-from', 'export-to']) $(id).addEventListener('input', () => {
+      for (const b of $('export-range').querySelectorAll('button')) b.setAttribute('aria-pressed', 'false');
+    });
+
+    function explainAdd() {
+      const n = Math.max(1, Math.min(50, Number($('add-count').value) || 1));
+      if (!prices || prices.initiation.amount == null || prices.subscription.amount == null) return ($('add-explain').textContent = "You'll see the exact amount on the next screen.");
+      $('add-explain').textContent =
+        `${money(prices.initiation.amount * n)} today for ${n === 1 ? 'the tracker' : `${n} trackers`}, shipped to your address on file. ` +
+        `Your monthly bill goes up by ${money(prices.subscription.amount * n)}, with this month's share charged to your card on file.`;
+    }
+    $('add-count').addEventListener('input', explainAdd);
+
+    // ── Actions ──────────────────────────────────────────────────────────────
+    async function act(noteId, fn) {
+      setNote($(noteId), '');
+      try {
+        await fn();
+      } catch (e) {
+        setNote($(noteId), e.message || 'Something went wrong. Try again.');
+      }
+    }
+    const check = ({ error }) => { if (error) throw new Error(error.message); };
+
+    $('portal').addEventListener('click', () => act('plan-note', async () => { location.href = (await billing('portal')).url; }));
+    $('cancel').addEventListener('click', () => act('plan-note', async () => { location.href = (await billing('cancel')).url; }));
+
+    // A button that is working says so, and can't be pressed twice.
+    async function busy(button, label, fn) {
+      const was = button.textContent;
+      button.disabled = true;
+      button.textContent = label;
+      try { await fn(); } finally { button.disabled = false; button.textContent = was; }
+    }
+
+    const pauseTruck = (v, left, button) => act('trucks-note', async () => {
+      if (!confirm(`Pause ${v.name}?\n\nIt comes off your bill now (no refund for the rest of this month) and stops tracking. Its tracker stays in, and you still get an alert if the truck moves.\n\nResume any time: no setup fee.${left === null ? '' : ` ${v.name} has ${days(left)} of pause left this year.`}`)) return;
+      await busy(button, 'Pausing…', () => billing('pause_truck', { vehicle_id: v.id }));
+      await render();
+    });
+
+    const resumeTruck = (v, button) => act('trucks-note', async () => {
+      if (!confirm(`Resume ${v.name}?\n\nIt starts tracking again and goes back on your bill, with this month's share charged to your card on file. No setup fee.`)) return;
+      await busy(button, 'Resuming…', () => billing('resume_truck', { vehicle_id: v.id }));
+      await render();
+    });
+
+    $('export').addEventListener('submit', (e) => {
+      e.preventDefault();
+      act('records-note', () => busy($('export-go'), 'Preparing…', async () => {
+        const kind = $('export-kind').value;
+        const from = $('export-from').value;
+        const to = $('export-to').value;
+        const { data, error } = await supabase.rpc('export_records', { p_kind: kind, p_from: from, p_to: to });
+        if (error) throw new Error(error.message);
+        if (data.trim().split('\n').length < 2 || (kind === 'mileage' && /\nTotal miles,0\.0\s*$/.test(data))) {
+          return setNote($('records-note'), 'Nothing was recorded in that period.', 'info');
+        }
+        download(`${kind.replace('_', '-')}-${from}-to-${to}.csv`, data);
+      }));
+    });
+
+    $('add-trucks').addEventListener('submit', (e) => {
+      e.preventDefault();
+      act('plan-note', async () => { location.href = (await billing('add_trucks', { count: Number($('add-count').value) })).url; });
+    });
+
+    $('new-truck').addEventListener('submit', (e) => {
+      e.preventDefault();
+      act('trucks-note', async () => {
+        check(await supabase.from('vehicles').insert({ name: $('truck-name').value.trim() }));
+        $('truck-name').value = '';
+        await render();
+      });
+    });
+
+    const pair = (vehicleId, imei) => act('trucks-note', async () => {
+      check(await supabase.rpc('add_device', { p_imei: imei, p_vehicle_id: vehicleId }));
+      await render();
+    });
+
+    const removeTruck = (v) => act('trucks-note', async () => {
+      const ask = v.status === 'paused'
+        ? `Remove ${v.name} from your plan?\n\nIt is paused, so it is already off your bill. Its tracker is unpaired now.`
+        : `Remove ${v.name} from your plan?\n\nIts tracker is unpaired now and your next bill is for one truck fewer. There is no refund for the rest of this month.\n\nOnly parking it for a while? Pause it instead: no charge while paused, and no setup fee to bring it back.`;
+      if (!confirm(ask)) return;
+      await billing('remove_truck', { vehicle_id: v.id });
+      await render();
+    });
+
+    $('invite').addEventListener('submit', (e) => {
+      e.preventDefault();
+      act('team-note', async () => {
+        if (!toE164($('invite-phone').value)) throw new Error('Enter their 10-digit mobile number.');
+        check(await supabase.rpc('invite_user', { p_name: $('invite-name').value, p_phone: $('invite-phone').value, p_role: $('invite-role').value }));
+        $('invite-name').value = '';
+        $('invite-phone').value = '';
+        await render();
+      });
+    });
+
+    const removePerson = (p) => act('team-note', async () => {
+      if (!confirm(`Remove ${p.name}? They lose access right away.`)) return;
+      check(await supabase.rpc('remove_user', { p_user_id: p.id }));
+      await render();
+    });
+
+    $('sign-out').addEventListener('click', async () => { await supabase.auth.signOut(); location.replace('dashboard.html'); });
+
+    // ── Start ────────────────────────────────────────────────────────────────
+    if (config.appStoreUrl) { $('ios-link').href = config.appStoreUrl; show($('ios-link')); }
+    if (config.playStoreUrl) { $('android-link').href = config.playStoreUrl; show($('android-link')); }
+    show($('app-soon'), !config.appStoreUrl && !config.playStoreUrl);
+
+    billing('prices').then((p) => { prices = p; explainAdd(); }).catch(() => {});
+    phoneSignIn($('sign-in'), route);
+    await route();
+
+    // Back from Stripe: the webhook takes a few seconds to land, so keep checking.
+    const returned = params.get('checkout');
+    if (returned && me) {
+      history.replaceState(null, '', 'dashboard.html');
+      setNote($('banner'), 'Payment received. Finishing setup…', 'info');
+      for (let i = 0; i < 20; i++) {
+        let done = false;
+        if (returned === 'added') {
+          // Done once the new tracker order shows up.
+          const { data } = await supabase.from('shipments').select('created_at').order('created_at', { ascending: false }).limit(1);
+          done = Boolean(data?.[0]) && Date.now() - new Date(data[0].created_at).getTime() < 5 * 60_000;
+        } else {
+          const now = await membership().catch(() => null);
+          done = Boolean(now) && now.company.status !== 'inactive';
+        }
+        if (done) {
+          if (returned === 'added') await new Promise((r) => setTimeout(r, 2500)); // let the new truck limit land
+          await render();
+          setNote($('banner'), returned === 'added' ? 'Trucks added. Your trackers are on the way.' : "You're set up. Your trackers are on the way. Add your trucks and invite your crew below.", 'good');
+          break;
+        }
+        await new Promise((r) => setTimeout(r, 1500));
+        if (i === 19) setNote($('banner'), 'Payment received. Setup is taking longer than usual. Refresh this page in a minute.', 'info');
+      }
+    }
+  </script>
+</body>
+</html>

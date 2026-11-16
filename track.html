@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>On the way</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="public track">
+  <div id="map" class="hidden" role="img"></div>
+  <main class="narrow sheet" aria-live="polite">
+    <p class="label" id="company"></p>
+    <h1 id="title"></h1>
+    <p class="status" id="status"><span class="dot" id="dot"></span><span id="status-text"></span></p>
+    <p class="dim" id="detail"></p>
+  </main>
+  <footer class="foot public-foot"><button class="link" id="lang" type="button"></button></footer>
+
+  <script src="config.js"></script>
+  <script type="module">
+    import { $, load, translator, languageSwitch } from './public.js';
+
+    const t = translator({
+      en: {
+        way: 'We’re on our way', arrived: 'Your crew arrived at {0}', arrivedNoTime: 'Your crew has arrived',
+        ended: 'This link has ended', endedText: 'Ask for a new one.',
+        unavailable: 'Location isn’t available right now.', unavailableText: 'This page will update by itself when it is.',
+        updated: 'Updated {0} ago', seen: 'Last seen {0} ago',
+        away: 'About {0} away', near: 'Almost there',
+        mi: '{0} miles', mi1: '1 mile', sec: '{0} sec', min: '{0} min', h: '{0} h',
+        offline: 'Can’t reach the map right now. Trying again.',
+        mapLabel: 'Map showing the truck and your address',
+      },
+      es: {
+        way: 'Vamos en camino', arrived: 'Su equipo llegó a las {0}', arrivedNoTime: 'Su equipo ya llegó',
+        ended: 'Este enlace ya no funciona', endedText: 'Pida uno nuevo.',
+        unavailable: 'La ubicación no está disponible en este momento.', unavailableText: 'Esta página se actualiza sola cuando lo esté.',
+        updated: 'Actualizado hace {0}', seen: 'Visto por última vez hace {0}',
+        away: 'A unas {0}', near: 'Ya casi llegamos',
+        mi: '{0} millas', mi1: '1 milla', sec: '{0} s', min: '{0} min', h: '{0} h',
+        offline: 'No se puede cargar el mapa ahora. Intentando de nuevo.',
+        mapLabel: 'Mapa con el camión y su dirección',
+      },
+    });
+
+    const config = window.FLEET_CONFIG;
+    let data = null;      // the last good answer
+    let offline = false;
+    let skew = 0;         // server clock minus this phone's clock
+    let timer = null;
+    let map = null;
+    let truckMarker = null;
+
+    const span = (ms) => {
+      const sec = Math.max(0, Math.floor(ms / 1000));
+      if (sec < 60) return t('sec', sec);
+      if (sec < 3600) return t('min', Math.floor(sec / 60));
+      return t('h', Math.floor(sec / 3600));
+    };
+    function milesBetween(a, b) {
+      const rad = (d) => (d * Math.PI) / 180;
+      const h = Math.sin(rad(b.lat - a.lat) / 2) ** 2
+        + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(rad(b.lng - a.lng) / 2) ** 2;
+      return 3958.8 * 2 * Math.asin(Math.sqrt(h));
+    }
+
+    function draw() {
+      const done = data && (!data.found || data.ended);
+      $('company').textContent = data?.company ?? '';
+      $('map').setAttribute('aria-label', t('mapLabel'));
+
+      if (!data) {
+        $('title').textContent = t('way');
+        $('status-text').textContent = offline ? t('offline') : '';
+        $('dot').className = 'dot';
+        $('detail').textContent = '';
+        return;
+      }
+      if (done) {
+        const arrived = data.found && 'arrived_at' in data;
+        $('title').textContent = arrived ? (data.arrived_at ? t('arrived', data.arrived_at) : t('arrivedNoTime')) : t('ended');
+        $('status-text').textContent = arrived ? '' : t('endedText');
+        $('dot').className = 'dot hidden';
+        $('detail').textContent = '';
+        $('map').classList.add('hidden');
+        document.body.classList.remove('has-map');
+        document.title = $('title').textContent;
+        return;
+      }
+
+      $('title').textContent = t('way');
+      document.title = data.company ? `${data.company} · ${t('way')}` : t('way');
+      if (!data.truck) {
+        $('status-text').textContent = t('unavailable');
+        $('dot').className = 'dot';
+        $('detail').textContent = t('unavailableText');
+        return;
+      }
+      // How old the position is, by the server's clock, counting up between refreshes.
+      const age = Date.now() + skew - new Date(data.truck.fix_time).getTime();
+      const live = age < 60_000;
+      $('status-text').textContent = t(age < 120_000 ? 'updated' : 'seen', span(age));
+      $('dot').className = `dot ${live ? 'live' : age < 600_000 ? 'recent' : ''}`;
+      const miles = milesBetween(data.truck, data.job);
+      const rounded = miles < 10 ? Math.round(miles * 10) / 10 : Math.round(miles);
+      $('detail').textContent = miles < 0.2 ? t('near') : t('away', rounded === 1 ? t('mi1') : t('mi', rounded));
+      if (offline) $('detail').textContent = t('offline');
+    }
+
+    async function showMap() {
+      if (!config.mapboxToken || !data?.truck || !data?.job || !window.mapboxgl) return;
+      const truck = [data.truck.lng, data.truck.lat];
+      const job = [data.job.lng, data.job.lat];
+      if (!map) {
+        $('map').classList.remove('hidden');
+        document.body.classList.add('has-map');
+        window.mapboxgl.accessToken = config.mapboxToken;
+        map = new window.mapboxgl.Map({
+          container: 'map',
+          style: matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12',
+          bounds: [truck, job], fitBoundsOptions: { padding: 72, maxZoom: 15 },
+          attributionControl: true, cooperativeGestures: true,
+        });
+        const pin = (cls) => Object.assign(document.createElement('div'), { className: `pin ${cls}` });
+        new window.mapboxgl.Marker({ element: pin('home') }).setLngLat(job).addTo(map);
+        truckMarker = new window.mapboxgl.Marker({ element: pin('truck') }).setLngLat(truck).addTo(map);
+      } else {
+        truckMarker.setLngLat(truck);
+        map.fitBounds([truck, job], { padding: 72, maxZoom: 15, duration: 600 });
+      }
+    }
+
+    async function refresh() {
+      try {
+        const next = await load();
+        offline = false;
+        data = next;
+        if (next.now) skew = new Date(next.now).getTime() - Date.now();
+        if (!next.found || next.ended) clearInterval(timer);
+        showMap();
+      } catch {
+        offline = true;
+      }
+      draw();
+    }
+
+    // The map library is only fetched when a map token is set (web/config.js).
+    if (config.mapboxToken) {
+      document.head.append(Object.assign(document.createElement('link'), {
+        rel: 'stylesheet', href: 'https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css',
+      }));
+      const s = Object.assign(document.createElement('script'), {
+        src: 'https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js', onload: showMap,
+      });
+      document.head.append(s);
+    }
+
+    languageSwitch($('lang'), draw);
+    draw();
+    refresh();
+    timer = setInterval(refresh, 10_000);          // the position, every 10 seconds
+    setInterval(() => data && draw(), 1_000);      // the age label counts up in between
+  </script>
+</body>
+</html>

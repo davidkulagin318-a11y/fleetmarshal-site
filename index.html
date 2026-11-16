@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{app}: fleet tracking built around the job</title>
+  <meta name="description" content="GPS fleet tracking and crew dispatch for trades businesses with 2 to 10 trucks. One price per truck, month to month, no contract.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="index.html" data-app-name></a>
+    <nav><a href="dashboard.html">Owner sign in</a></nav>
+  </header>
+
+  <main>
+    <h1>Competitors track the truck. We track the job.</h1>
+    <p class="dim">A plug-in tracker in each truck logs where it went, when it got to the job, how long it stayed and the miles. Nobody types anything.</p>
+
+    <div class="grid2">
+      <section class="card" aria-labelledby="monthly">
+        <span class="label" id="monthly">Per truck</span>
+        <div class="price" id="price-sub">…</div>
+        <ul class="plain">
+          <li>Send a job to a truck; the crew taps to route there</li>
+          <li>Arrival, departure and time on site, logged by the truck</li>
+          <li>Service reminders and check-engine alerts</li>
+          <li>Alerts for a pulled tracker or a truck moving after hours</li>
+          <li>Mileage log, ready for taxes</li>
+          <li>Every feature included. Unlimited crew logins.</li>
+        </ul>
+      </section>
+      <section class="card" aria-labelledby="once">
+        <span class="label" id="once">One time, per truck</span>
+        <div class="price" id="price-fee">…</div>
+        <ul class="plain">
+          <li>The GPS tracker, shipped to you</li>
+          <li>Plugs into the truck's OBD port. No wiring.</li>
+          <li>Extension cable to tuck it out of sight</li>
+        </ul>
+      </section>
+    </div>
+    <p id="price-note" class="note hidden"></p>
+
+    <section class="card" aria-labelledby="terms">
+      <h2 id="terms">The terms, in plain words</h2>
+      <ul class="terms">
+        <li><strong>Month to month. No contract.</strong> Cancel any time from your dashboard. No phone call, no notice period.</li>
+        <li><strong>Your price is locked.</strong> The per-truck price you sign up at stays the same for as long as you stay subscribed.</li>
+        <li><strong>30-day refund.</strong> Send the tracker back in your first 30 days and we refund your first month and the setup fee in full. After that, no refunds for part months.</li>
+        <li><strong>Pause for the season.</strong> Park a truck for the winter or the summer and pause it for up to 6 months a year. A paused truck is free, and still alerts you if it moves.</li>
+        <li><strong>The tracker is yours to keep.</strong> If you cancel, we switch off its connection. Nothing to send back.</li>
+        <li><strong>Your records stay yours.</strong> Download trips, mileage and job visits any time, and for 12 months after you cancel.</li>
+      </ul>
+    </section>
+
+    <a class="button primary" href="signup.html">Sign up your business</a>
+    <p class="small">For businesses only. Every account belongs to a company, including one-truck owner-operators.</p>
+
+    <section class="card" aria-labelledby="stuck">
+      <h2 id="stuck">Stuck in a contract with another tracking company?</h2>
+      <p class="dim">Most of them renew by themselves unless you give written notice weeks ahead. Work out your last day to give notice and get the letter written for you. Free, no sign-up.</p>
+      <div class="row"><a class="button" href="switch.html">Find my last day to cancel</a></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span id="support-line"></span>
+    <a href="privacy.html">Privacy</a>
+  </footer>
+
+  <script src="config.js"></script>
+  <script type="module">
+    import { $, billing, money, setNote, supportLine } from './shared.js';
+    try {
+      const p = await billing('prices');
+      $('price-sub').replaceChildren(money(p.subscription.amount, p.subscription.currency), Object.assign(document.createElement('small'), { textContent: ` / truck / ${p.subscription.interval}` }));
+      $('price-fee').replaceChildren(money(p.initiation.amount, p.initiation.currency), Object.assign(document.createElement('small'), { textContent: ' / truck, once' }));
+      const line = supportLine(p.support);
+      if (line) $('support-line').replaceChildren(line);
+    } catch {
+      $('price-sub').textContent = '—';
+      $('price-fee').textContent = '—';
+      setNote($('price-note'), "Prices can't be shown right now. You'll see the exact total before you pay.", 'info');
+    }
+  </script>
+</body>
+</html>

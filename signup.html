@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign up · {app}</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="index.html" data-app-name></a>
+    <nav><a href="dashboard.html">Owner sign in</a></nav>
+  </header>
+
+  <main class="narrow">
+    <h1>Sign up your business</h1>
+    <p id="cancelled" class="note info hidden">Checkout was cancelled. Nothing was charged. You can pick up where you left off.</p>
+
+    <!-- Step 1: prove the phone number. This is also how you'll sign in to the app. -->
+    <section class="card" id="step-phone">
+      <h2>1. Your mobile number</h2>
+      <p class="dim">You'll sign in to the app with this number. No password.</p>
+      <label>Mobile number <input data-phone type="tel" autocomplete="tel" inputmode="tel" placeholder="(515) 555-0123"></label>
+      <button data-send class="primary">Text me a code</button>
+      <div data-code-step class="hidden" style="display:grid;gap:12px">
+        <label>Code <input data-code inputmode="numeric" autocomplete="one-time-code" maxlength="6"></label>
+        <button data-verify class="primary">Continue</button>
+      </div>
+      <p data-note class="note hidden"></p>
+    </section>
+
+    <!-- Step 2: the business, then Stripe Checkout. -->
+    <form class="card hidden" id="step-business">
+      <h2>2. Your business</h2>
+      <label>Business name <input id="company" required maxlength="80" autocomplete="organization"></label>
+      <label>Your name <input id="name" required maxlength="80" autocomplete="name"></label>
+      <label>Email for receipts <input id="email" type="email" required autocomplete="email"></label>
+      <label>Number of trucks <input id="trucks" type="number" min="1" max="50" value="2" required inputmode="numeric"></label>
+      <p class="dim" id="estimate"></p>
+      <p class="small">Next you'll enter your card and a shipping address for the trackers on Stripe's secure checkout. You can add trucks later.</p>
+      <button class="primary" id="pay">Continue to payment</button>
+      <p id="form-note" class="note hidden"></p>
+    </form>
+  </main>
+
+  <script src="config.js"></script>
+  <script type="module">
+    import { $, billing, membership, money, phoneSignIn, setNote, show, supabase } from './shared.js';
+
+    if (new URLSearchParams(location.search).get('checkout') === 'cancelled') show($('cancelled'));
+
+    let prices = null;
+    billing('prices').then((p) => { prices = p; estimate(); }).catch(() => {});
+
+    function estimate() {
+      const n = Math.max(1, Math.min(50, Number($('trucks').value) || 1));
+      if (!prices || prices.subscription.amount == null || prices.initiation.amount == null) return ($('estimate').textContent = '');
+      const monthly = prices.subscription.amount * n;
+      const once = prices.initiation.amount * n;
+      $('estimate').textContent =
+        `${n} ${n === 1 ? 'truck' : 'trucks'}: ${money(monthly + once, prices.subscription.currency)} today ` +
+        `(${money(once)} for trackers, one time), then ${money(monthly)} per ${prices.subscription.interval}. Tax, if any, is shown at checkout.`;
+    }
+    $('trucks').addEventListener('input', estimate);
+
+    async function afterSignIn() {
+      const me = await membership().catch(() => null);
+      if (me && me.company.status !== 'inactive') return location.replace('dashboard.html');
+      if (me && me.role !== 'owner') {
+        show($('step-phone'), true);
+        return setNote(document.querySelector('[data-note]'), 'This number already belongs to a company as crew. Use a different number to sign up a business.');
+      }
+      if (me) { $('company').value = me.company.name; $('name').value = me.name; }
+      show($('step-phone'), false);
+      show($('step-business'));
+    }
+
+    phoneSignIn($('step-phone'), afterSignIn);
+    const { data } = await supabase.auth.getSession();
+    if (data.session) afterSignIn();
+
+    $('step-business').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      $('pay').disabled = true;
+      setNote($('form-note'), '');
+      try {
+        const { url } = await billing('signup', {
+          company_name: $('company').value,
+          your_name: $('name').value,
+          email: $('email').value,
+          trucks: Number($('trucks').value),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        });
+        location.href = url;
+      } catch (err) {
+        setNote($('form-note'), err.message);
+        $('pay').disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

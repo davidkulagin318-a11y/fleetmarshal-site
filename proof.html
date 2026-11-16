@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Proof of service</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="public proof">
+  <main class="narrow" aria-live="polite">
+    <section id="proof" class="hidden">
+      <div>
+        <p class="label" id="kicker"></p>
+        <h1 id="company"></h1>
+        <p class="dim" id="company-phone"></p>
+      </div>
+      <dl class="proof-facts">
+        <div><dt id="l-customer"></dt><dd id="customer"></dd></div>
+        <div><dt id="l-address"></dt><dd id="address"></dd></div>
+        <div><dt id="l-date"></dt><dd id="date"></dd></div>
+        <div id="crew-row" class="hidden"><dt id="l-crew"></dt><dd id="crew"></dd></div>
+      </dl>
+
+      <div class="card">
+        <span class="label" id="l-visits"></span>
+        <table class="visits">
+          <thead><tr><th id="h-truck"></th><th id="h-arrived"></th><th id="h-left"></th><th id="h-time" class="num"></th></tr></thead>
+          <tbody id="visits"></tbody>
+        </table>
+        <p class="total" id="total"></p>
+        <p class="small" id="gps"></p>
+      </div>
+
+      <div class="card hidden" id="work-card">
+        <span class="label" id="l-work"></span>
+        <ul class="done" id="work"></ul>
+        <p id="note" class="hidden"></p>
+      </div>
+
+      <div class="card hidden" id="photos-card">
+        <span class="label" id="l-photos"></span>
+        <div class="photos" id="photos"></div>
+      </div>
+
+      <button class="no-print" id="print" type="button"></button>
+    </section>
+    <section id="message" class="hidden">
+      <h1 id="message-title"></h1>
+      <p class="dim" id="message-text"></p>
+    </section>
+  </main>
+  <footer class="foot public-foot no-print"><button class="link" id="lang" type="button"></button></footer>
+
+  <script src="config.js"></script>
+  <script type="module">
+    import { $, load, translator, languageSwitch, language } from './public.js';
+
+    const t = translator({
+      en: {
+        kicker: 'Proof of service', customer: 'Customer', address: 'Address', date: 'Date', crew: 'Crew',
+        visits: 'Truck visits', truck: 'Truck', arrived: 'Arrived', left: 'Left', time: 'Time on site',
+        still: 'Still there', total: 'Total on site: {0}', noVisits: 'No truck visit was recorded for this job.',
+        gps: 'Arrival and departure times were recorded automatically by the truck’s GPS tracker.',
+        work: 'What was done', photos: 'Photos', before: 'Before', after: 'After', photo: 'Photo',
+        print: 'Print or save as PDF', min: '{0} min', hmin: '{0} h {1} min',
+        ended: 'This link has ended', endedText: 'Ask the company for a new one.',
+        offline: 'Can’t load this right now', offlineText: 'Check your signal and open the link again.',
+      },
+      es: {
+        kicker: 'Comprobante de servicio', customer: 'Cliente', address: 'Dirección', date: 'Fecha', crew: 'Equipo',
+        visits: 'Visitas del camión', truck: 'Camión', arrived: 'Llegó', left: 'Salió', time: 'Tiempo en el sitio',
+        still: 'Sigue ahí', total: 'Total en el sitio: {0}', noVisits: 'No se registró ninguna visita del camión para este trabajo.',
+        gps: 'Las horas de llegada y salida las registró automáticamente el rastreador GPS del camión.',
+        work: 'Lo que se hizo', photos: 'Fotos', before: 'Antes', after: 'Después', photo: 'Foto',
+        print: 'Imprimir o guardar como PDF', min: '{0} min', hmin: '{0} h {1} min',
+        ended: 'Este enlace ya no funciona', endedText: 'Pida uno nuevo a la empresa.',
+        offline: 'No se puede cargar ahora', offlineText: 'Revise su señal y abra el enlace otra vez.',
+      },
+    });
+
+    let data = null;
+    let failed = false;
+    const locale = () => (language() === 'es' ? 'es-US' : 'en-US');
+    const zone = () => data?.timezone || undefined;
+
+    const span = (minutes) => {
+      const m = Math.max(0, Math.round(minutes ?? 0));
+      return m >= 60 ? t('hmin', Math.floor(m / 60), String(m % 60).padStart(2, '0')) : t('min', m);
+    };
+    const clock = (iso) => new Date(iso).toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit', timeZone: zone() });
+    const stamp = (iso) => new Date(iso).toLocaleString(locale(), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: zone() });
+    function longDay(isoDay) {
+      const [y, m, d] = String(isoDay).split('-').map(Number);
+      if (!y || !m || !d) return '';
+      return new Date(y, m - 1, d).toLocaleDateString(locale(), { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    function phone(digits) {
+      const d = String(digits ?? '').replace(/\D/g, '');
+      const ten = d.length === 11 && d.startsWith('1') ? d.slice(1) : d;
+      return ten.length === 10 ? `(${ten.slice(0, 3)}) ${ten.slice(3, 6)}-${ten.slice(6)}` : d ? `+${d}` : '';
+    }
+    const cell = (text, className) => {
+      const td = document.createElement('td');
+      td.textContent = text;
+      if (className) td.className = className;
+      return td;
+    };
+
+    function message(title, text) {
+      $('proof').classList.add('hidden');
+      $('message').classList.remove('hidden');
+      $('message-title').textContent = title;
+      $('message-text').textContent = text;
+      document.title = title;
+    }
+
+    function draw() {
+      if (failed) return message(t('offline'), t('offlineText'));
+      if (!data) return;
+      if (!data.found || data.ended) return message(t('ended'), t('endedText'));
+
+      for (const [id, key] of [['kicker', 'kicker'], ['l-customer', 'customer'], ['l-address', 'address'], ['l-date', 'date'], ['l-crew', 'crew'],
+        ['l-visits', 'visits'], ['h-truck', 'truck'], ['h-arrived', 'arrived'], ['h-left', 'left'], ['h-time', 'time'],
+        ['gps', 'gps'], ['l-work', 'work'], ['l-photos', 'photos'], ['print', 'print']]) $(id).textContent = t(key);
+
+      $('company').textContent = data.company ?? '';
+      $('company-phone').textContent = phone(data.company_phone);
+      $('customer').textContent = data.customer_name ?? '';
+      $('address').textContent = data.address ?? '';
+      $('date').textContent = longDay(data.job_date);
+      const crew = Array.isArray(data.crew) ? data.crew : [];
+      $('crew').textContent = crew.join(', ');
+      $('crew-row').classList.toggle('hidden', crew.length === 0);
+
+      const visits = data.visits ?? [];
+      $('visits').replaceChildren(...visits.map((v) => {
+        const tr = document.createElement('tr');
+        tr.append(cell(v.truck ?? ''), cell(clock(v.arrived_at)), cell(v.departed_at ? clock(v.departed_at) : t('still')),
+          cell(v.minutes != null ? span(v.minutes) : '', 'num'));
+        return tr;
+      }));
+      $('total').textContent = visits.length ? t('total', span(data.total_minutes)) : t('noVisits');
+      $('gps').classList.toggle('hidden', visits.length === 0);
+
+      const work = data.work ?? [];
+      $('work').replaceChildren(...work.map((w) => {
+        const li = document.createElement('li');
+        li.textContent = w.count != null ? `${w.label}: ${w.count}` : w.label;
+        return li;
+      }));
+      $('note').textContent = data.note ?? '';
+      $('note').classList.toggle('hidden', !data.note);
+      $('work-card').classList.toggle('hidden', work.length === 0 && !data.note);
+
+      const photos = (data.photos ?? []).filter((p) => p.url);
+      $('photos').replaceChildren(...photos.map((p) => {
+        const figure = document.createElement('figure');
+        const img = document.createElement('img');
+        const label = p.kind === 'before' ? t('before') : p.kind === 'after' ? t('after') : t('photo');
+        img.src = p.url;
+        img.alt = `${label}, ${stamp(p.at)}`;
+        img.loading = 'lazy';
+        const caption = document.createElement('figcaption');
+        caption.textContent = `${label} · ${stamp(p.at)}`;
+        figure.append(img, caption);
+        return figure;
+      }));
+      $('photos-card').classList.toggle('hidden', photos.length === 0);
+
+      document.title = `${t('kicker')} · ${data.customer_name ?? ''}`;
+      $('message').classList.add('hidden');
+      $('proof').classList.remove('hidden');
+    }
+
+    $('print').addEventListener('click', () => window.print());
+    languageSwitch($('lang'), draw);
+    load().then((d) => { data = d; }, () => { failed = true; }).then(draw);
+  </script>
+</body>
+</html>

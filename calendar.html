@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Calendar</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="public">
+  <main class="narrow">
+    <section>
+      <h1 id="title"></h1>
+      <p class="dim" id="text"></p>
+      <div class="stack"><a class="button primary block big" id="open" href="fleetmarshal://company"></a></div>
+    </section>
+  </main>
+  <footer class="foot public-foot"><button class="link" id="lang" type="button"></button></footer>
+
+  <script src="config.js"></script>
+  <script type="module">
+    import { $, translator, languageSwitch } from './public.js';
+
+    const t = translator({
+      en: {
+        connected: 'Calendar connected', connectedText: 'Go back to the app and tick the calendars that hold your jobs.',
+        cancelled: 'Nothing was connected', cancelledText: 'You left Google’s sign-in before finishing. You can try again from the app.',
+        failed: 'That didn’t work', failedText: 'Go back to the app and tap Connect Google Calendar again.',
+        open: 'Back to {0}',
+      },
+      es: {
+        connected: 'Calendario conectado', connectedText: 'Vuelve a la app y marca los calendarios donde están tus trabajos.',
+        cancelled: 'No se conectó nada', cancelledText: 'Saliste del inicio de sesión de Google antes de terminar. Puedes intentarlo otra vez desde la app.',
+        failed: 'No funcionó', failedText: 'Vuelve a la app y toca Conectar Google Calendar otra vez.',
+        open: 'Volver a {0}',
+      },
+    });
+    const asked = new URLSearchParams(location.search).get('result');
+    const result = ['connected', 'cancelled', 'failed'].includes(asked) ? asked : 'failed';
+    function draw() {
+      $('title').textContent = t(result);
+      $('text').textContent = t(`${result}Text`);
+      $('open').textContent = t('open', window.FLEET_CONFIG.appName);
+      $('open').href = `fleetmarshal://company?calendar=${result}`;
+      document.title = t(result);
+    }
+    languageSwitch($('lang'), draw);
+    draw();
+  </script>
+</body>
+</html>

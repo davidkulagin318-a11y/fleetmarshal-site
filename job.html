@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Job</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="public">
+  <main class="narrow" aria-live="polite">
+    <section id="job" class="hidden">
+      <p class="label" id="company"></p>
+      <h1 id="name"></h1>
+      <p class="where" id="address"></p>
+      <p class="dim" id="when"></p>
+      <p class="note info hidden" id="cancelled"></p>
+      <div class="card hidden" id="notes-card">
+        <span class="label" id="notes-label"></span>
+        <p id="notes"></p>
+      </div>
+      <div class="stack" id="go">
+        <a class="button primary block big" id="google" rel="noopener"></a>
+        <a class="button block big" id="apple" rel="noopener"></a>
+      </div>
+    </section>
+    <section id="message" class="hidden">
+      <h1 id="message-title"></h1>
+      <p class="dim" id="message-text"></p>
+    </section>
+  </main>
+  <footer class="foot public-foot"><button class="link" id="lang" type="button"></button></footer>
+
+  <script src="config.js"></script>
+  <script type="module">
+    import { $, load, translator, languageSwitch, dayText } from './public.js';
+
+    const t = translator({
+      en: {
+        title: 'Job for {0}', notes: 'Notes',
+        google: 'Open in Google Maps', apple: 'Open in Apple Maps',
+        cancelled: 'This job was cancelled.',
+        ended: 'This link has ended', endedText: 'Ask for a new one.',
+        offline: 'Can’t load this right now', offlineText: 'Check your signal and open the link again.',
+      },
+      es: {
+        title: 'Trabajo para el {0}', notes: 'Notas',
+        google: 'Abrir en Google Maps', apple: 'Abrir en Apple Maps',
+        cancelled: 'Este trabajo fue cancelado.',
+        ended: 'Este enlace ya no funciona', endedText: 'Pide uno nuevo.',
+        offline: 'No se puede cargar ahora', offlineText: 'Revisa tu señal y abre el enlace otra vez.',
+      },
+    });
+
+    let data = null;
+    let failed = false;
+
+    function message(title, text) {
+      $('job').classList.add('hidden');
+      $('message').classList.remove('hidden');
+      $('message-title').textContent = title;
+      $('message-text').textContent = text;
+      document.title = title;
+    }
+
+    function draw() {
+      if (failed) return message(t('offline'), t('offlineText'));
+      if (!data) return;
+      if (!data.found || data.ended) return message(t('ended'), t('endedText'));
+
+      const day = dayText(data.job_date);
+      $('company').textContent = data.company ?? '';
+      $('name').textContent = data.customer_name ?? '';
+      $('address').textContent = data.address ?? '';
+      $('when').textContent = [day, data.truck].filter(Boolean).join(' · ');
+      $('notes-label').textContent = t('notes');
+      $('notes').textContent = data.notes ?? '';
+      $('notes-card').classList.toggle('hidden', !data.notes);
+      $('cancelled').textContent = t('cancelled');
+      $('cancelled').classList.toggle('hidden', !data.cancelled);
+      $('go').classList.toggle('hidden', !!data.cancelled);
+
+      const hasPoint = Number.isFinite(data.lat) && Number.isFinite(data.lng);
+      const dest = hasPoint ? `${data.lat},${data.lng}` : encodeURIComponent(data.address ?? '');
+      $('google').textContent = t('google');
+      $('google').href = `https://www.google.com/maps/dir/?api=1&destination=${dest}`;
+      $('apple').textContent = t('apple');
+      $('apple').href = `https://maps.apple.com/?daddr=${dest}&dirflg=d`;
+
+      document.title = t('title', day);
+      $('message').classList.add('hidden');
+      $('job').classList.remove('hidden');
+    }
+
+    languageSwitch($('lang'), draw);
+    load().then((d) => { data = d; }, () => { failed = true; }).then(draw);
+  </script>
+</body>
+</html>

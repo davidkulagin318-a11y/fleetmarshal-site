@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Get out of your tracking contract · {app}</title>
+  <meta name="description" content="Most fleet tracking contracts renew by themselves unless you give written notice. Find your last day to give notice, set a reminder and get the cancellation letter written for you. Free, no sign-up.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="index.html" data-app-name></a>
+    <nav><a href="index.html">Pricing</a></nav>
+  </header>
+
+  <main class="narrow">
+    <h1 class="no-print">Get out of your tracking contract</h1>
+    <p class="dim no-print">Most tracking contracts renew by themselves, often for another year or more, unless you give written notice weeks ahead. Three answers from your contract and you'll know your deadline. Nothing you type leaves this page.</p>
+
+    <section class="card no-print" aria-labelledby="h-contract">
+      <h2 id="h-contract">Your contract</h2>
+      <label>Tracking company <input id="provider" maxlength="80" autocomplete="off" placeholder="The company on your bill"></label>
+      <label>Renewal date <input id="renewal" type="date"></label>
+      <p class="small">The day the current term ends. It's usually on the contract's first page or your latest renewal notice.</p>
+      <div style="display:grid;gap:6px">
+        <span class="label" id="l-notice">Notice they ask for</span>
+        <div class="chips" id="notice" role="group" aria-labelledby="l-notice">
+          <button type="button" data-days="30">30 days</button>
+          <button type="button" data-days="60" aria-pressed="true">60 days</button>
+          <button type="button" data-days="90">90 days</button>
+          <input id="notice-other" type="number" min="0" max="365" inputmode="numeric" placeholder="Other" aria-label="Other number of days" style="width:104px;min-height:44px">
+        </div>
+      </div>
+    </section>
+
+    <section class="card hidden no-print" id="result" aria-live="polite">
+      <span class="label">Last day to give notice</span>
+      <div class="answer" id="last-day"></div>
+      <p class="dim" id="countdown"></p>
+      <div class="row">
+        <button class="primary" id="ics">Add a reminder to my calendar</button>
+      </div>
+      <p class="small" id="ics-note"></p>
+    </section>
+
+    <section class="card hidden" id="letter-card">
+      <h2 class="no-print">Your cancellation letter</h2>
+      <div class="grid2 no-print">
+        <label>Your business <input id="business" maxlength="80" autocomplete="organization"></label>
+        <label>Account number, if you have one <input id="account" maxlength="40" autocomplete="off"></label>
+        <label>Your name <input id="signer" maxlength="80" autocomplete="name"></label>
+        <label>Your phone or email <input id="contact" maxlength="80" autocomplete="email"></label>
+      </div>
+      <textarea id="letter" spellcheck="true" aria-label="Cancellation letter"></textarea>
+      <div class="actions no-print">
+        <button class="primary" id="print">Print</button>
+        <a class="button" id="email">Email it</a>
+        <button id="copy">Copy</button>
+      </div>
+      <p class="small no-print">Send it a way you can prove later, like certified mail or an email you keep a copy of, and ask them to confirm in writing.</p>
+      <p class="small no-print">This is a template, not legal advice. Check the notice terms in your own contract.</p>
+    </section>
+
+    <section class="card no-print" aria-labelledby="h-after">
+      <h2 id="h-after">When you're out</h2>
+      <p class="dim"><span data-app-name></span> is month to month with one public price per truck. No contract to get out of.</p>
+      <div class="row"><a class="button" href="index.html">See the price</a></div>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script>
+    // Plain script, no network: this page works with nothing behind it.
+    const $ = (id) => document.getElementById(id);
+    const show = (node, on = true) => node.classList.toggle('hidden', !on);
+    const DAY = 86400000;
+    const long = (d) => d.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    const plain = (d) => d.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+    const stamp = (d) => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+    const startOfToday = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); };
+
+    document.querySelectorAll('[data-app-name]').forEach((n) => (n.textContent = window.FLEET_CONFIG.appName));
+    document.title = document.title.replace('{app}', window.FLEET_CONFIG.appName);
+
+    let noticeDays = 60;
+    let letterEdited = false; // once they type in the letter, we stop rewriting it under them
+
+    function parts() {
+      const value = $('renewal').value; // YYYY-MM-DD
+      if (!value) return null;
+      const [y, m, d] = value.split('-').map(Number);
+      const renewal = new Date(y, m - 1, d);
+      const last = new Date(y, m - 1, d - noticeDays);
+      return { renewal, last, daysLeft: Math.round((last - startOfToday()) / DAY) };
+    }
+
+    function letter(p) {
+      const provider = $('provider').value.trim() || '[Tracking company]';
+      const business = $('business').value.trim() || '[Your business name]';
+      const account = $('account').value.trim();
+      const signer = $('signer').value.trim() || '[Your name]';
+      const contact = $('contact').value.trim() || '[Your phone or email]';
+      return [
+        plain(new Date()),
+        '',
+        provider,
+        'Attn: Cancellations',
+        '',
+        `Re: Notice of non-renewal, ${business}${account ? `, account ${account}` : ''}`,
+        '',
+        'To whom it may concern:',
+        '',
+        `This letter is written notice that ${business} will not renew its agreement with ${provider}. The current term ends on ${plain(p.renewal)}. Please cancel all services and stop all billing as of that date.`,
+        '',
+        `This notice is given ${Math.max(0, Math.round((p.renewal - startOfToday()) / DAY))} days before the end of the term. The agreement asks for ${noticeDays}.`,
+        '',
+        'Please confirm in writing that you have received this notice, the date service ends, and how any equipment should be returned.',
+        '',
+        'Sincerely,',
+        '',
+        '',
+        signer,
+        business,
+        contact,
+      ].join('\n');
+    }
+
+    function render() {
+      const p = parts();
+      show($('result'), Boolean(p));
+      show($('letter-card'), Boolean(p));
+      if (!p) return;
+
+      const late = p.daysLeft < 0;
+      $('last-day').textContent = long(p.last);
+      $('last-day').classList.toggle('late', late);
+      $('countdown').textContent = late
+        ? `That was ${-p.daysLeft} ${p.daysLeft === -1 ? 'day' : 'days'} ago, so this term has probably renewed already. Send the letter anyway so the next renewal can't catch you, and ask them for the new end date in writing.`
+        : p.daysLeft === 0 ? 'That is today. Send the letter now.'
+        : `${p.daysLeft} ${p.daysLeft === 1 ? 'day' : 'days'} from today. Sending it earlier is fine, and safer.`;
+      show($('ics'), !late);
+      const remind = reminderDay(p);
+      $('ics-note').textContent = late ? '' : `The reminder is set for ${plain(remind)}${remind.getTime() === startOfToday().getTime() + DAY ? ', tomorrow, because the deadline is close' : ', two weeks before the deadline'}.`;
+
+      if (!letterEdited) $('letter').value = letter(p);
+      const subject = `Notice of non-renewal${$('business').value.trim() ? `: ${$('business').value.trim()}` : ''}`;
+      $('email').href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent($('letter').value)}`;
+    }
+
+    // Two weeks before the last day, or tomorrow if that has already gone by.
+    function reminderDay(p) {
+      const twoWeeks = new Date(p.last.getFullYear(), p.last.getMonth(), p.last.getDate() - 14);
+      const tomorrow = new Date(startOfToday().getTime() + DAY);
+      return twoWeeks > tomorrow ? twoWeeks : tomorrow;
+    }
+
+    $('notice').addEventListener('click', (e) => {
+      const picked = e.target.dataset.days;
+      if (!picked) return;
+      noticeDays = Number(picked);
+      $('notice-other').value = '';
+      for (const b of $('notice').querySelectorAll('button')) b.setAttribute('aria-pressed', String(b === e.target));
+      render();
+    });
+    $('notice-other').addEventListener('input', () => {
+      const n = Number($('notice-other').value);
+      if ($('notice-other').value === '' || !Number.isFinite(n) || n < 0 || n > 365) return;
+      noticeDays = Math.round(n);
+      for (const b of $('notice').querySelectorAll('button')) b.setAttribute('aria-pressed', 'false');
+      render();
+    });
+    for (const id of ['provider', 'renewal', 'business', 'account', 'signer', 'contact']) $(id).addEventListener('input', render);
+    $('letter').addEventListener('input', () => { letterEdited = true; render(); });
+
+    $('ics').addEventListener('click', () => {
+      const p = parts();
+      if (!p) return;
+      const day = reminderDay(p);
+      const next = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1);
+      const provider = $('provider').value.trim() || 'tracking company';
+      const esc = (s) => s.replace(/[\;,]/g, '\\$&').replace(/\n/g, '\\n');
+      const ics = [
+        'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Fleet Marshal//Contract reminder//EN', 'BEGIN:VEVENT',
+        `UID:${Date.now()}-contract-notice@fleetmarshal`,
+        `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
+        `DTSTART;VALUE=DATE:${stamp(day)}`, `DTEND;VALUE=DATE:${stamp(next)}`,
+        `SUMMARY:${esc(`Send cancellation notice to ${provider}`)}`,
+        `DESCRIPTION:${esc(`Last day to give notice: ${long(p.last)}. The contract renews on ${plain(p.renewal)} unless they get ${noticeDays} days' written notice.`)}`,
+        'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Send the cancellation notice', 'TRIGGER;RELATED=START:PT9H', 'END:VALARM',
+        'END:VEVENT', 'END:VCALENDAR',
+      ].join('\r\n');
+      const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
+      const link = Object.assign(document.createElement('a'), { href: url, download: 'cancel-tracking-contract.ics' });
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    });
+
+    $('print').addEventListener('click', () => {
+      // A textarea prints only what fits its box, so size it to the whole letter first.
+      $('letter').style.height = 'auto';
+      $('letter').style.height = `${$('letter').scrollHeight + 4}px`;
+      window.print();
+    });
+    $('copy').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText($('letter').value); } catch { $('letter').select(); document.execCommand('copy'); }
+      $('copy').textContent = 'Copied';
+      setTimeout(() => ($('copy').textContent = 'Copy'), 1500);
+    });
+  </script>
+</body>
+</html>

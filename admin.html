@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Tracker orders · {app}</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="index.html" data-app-name></a>
+    <nav><button id="sign-out" class="hidden">Sign out</button></nav>
+  </header>
+
+  <main>
+    <h1>Tracker orders</h1>
+    <p class="dim">Yours only. Every paid signup and every "add trucks" lands here with where to send the trackers.</p>
+    <p id="banner" class="note hidden"></p>
+
+    <section class="card hidden" id="sign-in" style="max-width:520px">
+      <h2>Sign in</h2>
+      <label>Mobile number <input data-phone type="tel" autocomplete="tel" inputmode="tel"></label>
+      <button data-send class="primary">Text me a code</button>
+      <div data-code-step class="hidden" style="display:grid;gap:12px">
+        <label>Code <input data-code inputmode="numeric" autocomplete="one-time-code" maxlength="6"></label>
+        <button data-verify class="primary">Sign in</button>
+      </div>
+      <p data-note class="note hidden"></p>
+    </section>
+
+    <section class="card hidden" id="orders-card">
+      <div class="list" id="orders"></div>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script type="module">
+    import { $, el, phoneSignIn, setNote, show, supabase } from './shared.js';
+
+    const STATUS = { pending: ['To ship', 'warn'], shipped: ['Shipped', 'good'], delivered: ['Delivered', 'good'], cancelled: ['Cancelled', 'bad'] };
+    const day = (iso) => new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+
+    function addressLines(order) {
+      const a = order.ship_to ?? {};
+      return [order.ship_to_name, a.line1, a.line2, [a.city, a.state, a.postal_code].filter(Boolean).join(', ')].filter(Boolean);
+    }
+
+    async function update(order, status, tracking) {
+      setNote($('banner'), '');
+      const { error } = await supabase.rpc('admin_update_shipment', { p_id: order.id, p_status: status, p_tracking: tracking });
+      if (error) return setNote($('banner'), error.message);
+      await load();
+    }
+
+    async function load() {
+      const { data: session } = await supabase.auth.getSession();
+      show($('sign-in'), !session.session);
+      show($('sign-out'), Boolean(session.session));
+      show($('orders-card'), false);
+      if (!session.session) return;
+
+      const { data, error } = await supabase.rpc('admin_shipments');
+      if (error) return setNote($('banner'), error.message === 'Not allowed' ? "This number isn't set up as an admin. See README, \"Filling tracker orders\"." : error.message);
+      show($('orders-card'));
+      $('orders').replaceChildren(
+        ...data.map((order) => {
+          const tracking = el('input', { placeholder: 'Tracking number', value: order.tracking_number ?? '', 'aria-label': `Tracking number for ${order.company_name}`, style: 'max-width:220px' });
+          return el('div', { class: 'item' },
+            el('div', { class: 'who' },
+              el('strong', {}, `${order.quantity} ${order.quantity === 1 ? 'tracker' : 'trackers'} · ${order.company_name}`),
+              ...addressLines(order).map((line) => el('span', { class: 'dim', style: 'display:block' }, line)),
+              el('span', { class: 'small' }, `Ordered ${day(order.created_at)}${order.billing_email ? ` · ${order.billing_email}` : ''}`)),
+            el('span', { class: `tag ${STATUS[order.status][1]}` }, STATUS[order.status][0]),
+            el('div', { class: 'row' },
+              tracking,
+              order.status === 'pending' ? el('button', { class: 'primary', onclick: () => update(order, 'shipped', tracking.value) }, 'Mark shipped') : null,
+              order.status === 'shipped' ? el('button', { onclick: () => update(order, 'delivered', tracking.value) }, 'Mark delivered') : null,
+              order.status !== 'pending' ? el('button', { onclick: () => update(order, 'pending', tracking.value) }, 'Back to "to ship"') : null));
+        }),
+        data.length === 0 ? el('p', { class: 'dim' }, 'No orders yet.') : null);
+    }
+
+    $('sign-out').addEventListener('click', async () => { await supabase.auth.signOut(); location.reload(); });
+    phoneSignIn($('sign-in'), load);
+    await load();
+  </script>
+</body>
+</html>
