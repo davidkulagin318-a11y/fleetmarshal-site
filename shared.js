@@ -1,6 +1,6 @@
 // Shared by every page: the Supabase client, sign-in by texted code, calls to
 // the billing function, and a few small helpers.
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from './vendor/supabase.js';
 
 export const config = window.FLEET_CONFIG;
 export const supabase = createClient(config.supabaseUrl, config.supabaseKey);
