@@ -5,82 +5,201 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{app}: fleet tracking built around the job</title>
   <meta name="description" content="GPS fleet tracking and crew dispatch for trades businesses with 2 to 10 trucks. One price per truck, month to month, no contract.">
+  <meta name="theme-color" content="#26593b">
+  <meta property="og:title" content="Fleet Marshal: fleet tracking built around the job">
+  <meta property="og:description" content="GPS tracking and dispatch for crews running 2 to 10 trucks. No contract.">
+  <meta property="og:image" content="https://fleetmarshalapp.com/og.png">
+  <meta property="og:url" content="https://fleetmarshalapp.com/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="home.css">
 </head>
 <body>
   <header class="top">
     <a class="brand" href="index.html" data-app-name></a>
-    <nav><a href="app/">Open the app</a> <a href="dashboard.html">Your account</a></nav>
+    <nav>
+      <a class="wide-only" href="#pricing">Pricing</a>
+      <a href="app/">Sign in</a>
+      <a class="pill" href="signup.html">Get started</a>
+    </nav>
   </header>
 
-  <main>
-    <h1>Competitors track the truck. We track the job.</h1>
-    <p class="dim">A plug-in tracker in each truck logs where it went, when it got to the job, how long it stayed and the miles. Nobody types anything.</p>
+  <main class="home">
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-copy">
+          <h1><span>Fleet tracking</span> <em>that doesn't suck.</em></h1>
+          <p class="sub">They track the truck. We track the job.</p>
+          <div class="cta">
+            <a class="button amber" href="signup.html">Get started</a>
+            <a class="button ghost" href="#pricing">See pricing</a>
+          </div>
+          <ul class="ticks">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No contract</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No wiring</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Cancel anytime</li>
+          </ul>
+        </div>
 
-    <div class="grid2">
-      <section class="card" aria-labelledby="monthly">
-        <span class="label" id="monthly">Per truck</span>
-        <div class="price" id="price-sub">…</div>
-        <ul class="plain">
-          <li>Send a job to a truck; the crew taps to route there</li>
-          <li>Arrival, departure and time on site, logged by the truck</li>
-          <li>Service reminders and check-engine alerts</li>
-          <li>Alerts for a pulled tracker or a truck moving after hours</li>
-          <li>Mileage log, ready for taxes</li>
-          <li>Every feature included. Unlimited crew logins.</li>
-        </ul>
-      </section>
-      <section class="card" aria-labelledby="once">
-        <span class="label" id="once">One time, per truck</span>
-        <div class="price" id="price-fee">…</div>
-        <ul class="plain">
-          <li>The GPS tracker, shipped to you</li>
-          <li>Plugs into the truck's OBD port. No wiring.</li>
-          <li>Extension cable to tuck it out of sight</li>
-        </ul>
-      </section>
-    </div>
-    <p id="price-note" class="note hidden"></p>
-
-    <section class="card" aria-labelledby="terms">
-      <h2 id="terms">The terms, in plain words</h2>
-      <ul class="terms">
-        <li><strong>Month to month. No contract.</strong> Cancel any time from your dashboard. No phone call, no notice period.</li>
-        <li><strong>Your price is locked.</strong> The per-truck price you sign up at stays the same for as long as you stay subscribed.</li>
-        <li><strong>30-day refund.</strong> Send the tracker back in your first 30 days and we refund your first month and the setup fee in full. After that, no refunds for part months.</li>
-        <li><strong>Pause for the season.</strong> Park a truck for the winter or the summer and pause it for up to 6 months a year. A paused truck is free, and still alerts you if it moves.</li>
-        <li><strong>The tracker is yours to keep.</strong> If you cancel, we switch off its connection. Nothing to send back.</li>
-        <li><strong>Your records stay yours.</strong> Download trips, mileage and job visits any time, and for 12 months after you cancel.</li>
-      </ul>
+        <div class="scene">
+          <div class="map">
+            <!-- A real street map of Palm Coast, drawn by Mapbox. The pins sit on top. -->
+            <img src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/-81.2105,29.5745,12.6,0/640x500@2x?access_token=pk.eyJ1IjoiZGF2aWRrdWxhZ2luMzE4IiwiYSI6ImNtd2pzZ3EwOTAwcXYyeW9pamxhNGh2d2wifQ.HeBtrG2kFnGIIGTGPBoNZw" width="640" height="500" alt="">
+            <svg viewBox="0 0 640 500" role="img" aria-label="A map with three trucks. Truck 1 has just arrived at a job.">
+              <circle cx="520" cy="236" r="44" fill="#26593b" fill-opacity="0.16" stroke="#26593b" stroke-opacity="0.7" stroke-width="2" stroke-dasharray="5 6"/>
+              <g font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="14" style="filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.25))">
+              <g>
+                <circle class="pulse" cx="520" cy="236" r="8" fill="#24ae56"/>
+                <circle cx="520" cy="236" r="8" fill="#24ae56" stroke="#fff" stroke-width="3"/>
+                <rect x="464" y="190" width="112" height="30" rx="7" fill="#fff" stroke="#000" stroke-opacity="0.18"/>
+                <text x="476" y="210" fill="#151715">Truck 1 <tspan fill="#707270" font-weight="500" font-size="12">on site</tspan></text>
+              </g>
+              <g>
+                
+                <circle cx="250" cy="318" r="8" fill="#707270" stroke="#fff" stroke-width="3"/>
+                <rect x="188" y="272" width="124" height="30" rx="7" fill="#fff" stroke="#000" stroke-opacity="0.18"/>
+                <text x="200" y="292" fill="#151715">Blue F-150 <tspan fill="#707270" font-weight="500" font-size="12">3m</tspan></text>
+              </g>
+              <g>
+                
+                <circle cx="118" cy="200" r="8" fill="#24ae56" stroke="#fff" stroke-width="3"/>
+                <rect x="56" y="154" width="124" height="30" rx="7" fill="#fff" stroke="#000" stroke-opacity="0.18"/>
+                <text x="68" y="174" fill="#151715">Box van <tspan fill="#707270" font-weight="500" font-size="12">62 mph</tspan></text>
+              </g>
+              </g>
+            </svg>
+          </div>
+          <div class="toast" aria-hidden="true">
+            <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+            <div><strong>Truck 1 arrived</strong><span>Hammock Dunes HOA · 8:31 AM</span></div>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <a class="button primary" href="signup.html">Sign up your business</a>
-    <p class="small">For businesses only. Every account belongs to a company, including one-truck owner-operators.</p>
+    <section>
+      <div class="wrap">
+        <p class="eyebrow">How it works</p>
+        <h2>Set up in the time it takes to park.</h2>
+        <ol class="steps">
+          <li><h3>Plug it in</h3></li>
+          <li><h3>Send the job</h3></li>
+          <li><h3>It logs itself</h3></li>
+        </ol>
+      </div>
+    </section>
 
-    <section class="card" aria-labelledby="stuck">
-      <h2 id="stuck">Stuck in a contract with another tracking company?</h2>
-      <p class="dim">Most of them renew by themselves unless you give written notice weeks ahead. Work out your last day to give notice and get the letter written for you. Free, no sign-up.</p>
-      <div class="row"><a class="button" href="switch.html">Find my last day to cancel</a></div>
+    <section class="band">
+      <div class="wrap">
+        <p class="eyebrow">What you get</p>
+        <h2>Everything a small fleet needs.</h2>
+        <div class="feats">
+          <div class="feat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0113 0c0 5.400-6.5 11-6.500 11z"/><circle cx="12" cy="10" r="2.500"/></svg>
+            <h3>Live map</h3>
+          </div>
+          <div class="feat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4 18-7z"/></svg>
+            <h3>Job dispatch</h3>
+          </div>
+          <div class="feat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <h3>Time on site</h3>
+          </div>
+          <div class="feat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/></svg>
+            <h3>Mileage log</h3>
+          </div>
+          <div class="feat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.500 6.500a4 4 0 00-5.300 5.300L3 18l3 3 6.200-6.200a4 4 0 005.300-5.300L15 12l-3-3 2.500-2.500z"/></svg>
+            <h3>Service reminders</h3>
+          </div>
+          <div class="feat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.500-3.400 8-8 9-4.600-1-8-4.500-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+            <h3>Security alerts</h3>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pricing" id="pricing">
+      <div class="wrap">
+        <div>
+          <p class="eyebrow">Pricing</p>
+          <h2>One price per truck.</h2>
+          <p class="lead">Every feature. Unlimited crew logins.</p>
+          <details class="fine">
+            <summary>The terms, in plain words</summary>
+            <ul class="terms">
+              <li><strong>Month to month. No contract.</strong> Cancel any time from your dashboard. No phone call, no notice period.</li>
+              <li><strong>Your price is locked.</strong> The per-truck price you sign up at stays the same for as long as you stay subscribed.</li>
+              <li><strong>30-day refund.</strong> Send the tracker back in your first 30 days and we refund your first month and the setup fee in full. After that, no refunds for part months.</li>
+              <li><strong>Pause for the season.</strong> Park a truck for the winter or the summer and pause it for up to 6 months a year. A paused truck is free, and still alerts you if it moves.</li>
+              <li><strong>The tracker is yours to keep.</strong> If you cancel, we switch off its connection. Nothing to send back.</li>
+              <li><strong>Your records stay yours.</strong> Download trips, mileage and job visits any time, and for 12 months after you cancel.</li>
+            </ul>
+          </details>
+        </div>
+        <div class="plan">
+          <div>
+            <div class="amount" id="price-sub">…</div>
+            <p class="once" id="price-fee"></p>
+          </div>
+          <hr>
+          <ul class="checks">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.500" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg>No contract. Cancel anytime.</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.500" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg>Your price stays locked.</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.500" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg>30-day money back.</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.500" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg>Pause a truck free in the off-season.</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.500" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg>The tracker is yours to keep.</li>
+          </ul>
+          <a class="button primary" href="signup.html">Get started</a>
+          <p id="price-note" class="note hidden"></p>
+          <p class="small">For businesses, including one-truck owner-operators.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="switch">
+      <div class="wrap">
+        <div>
+          <div>
+            <h2>Stuck in a contract?</h2>
+            <p>Find your last day to cancel. Free, no sign-up.</p>
+          </div>
+          <a class="button amber" href="switch.html">Check my date</a>
+        </div>
+      </div>
     </section>
   </main>
 
-  <footer class="foot">
-    <span id="support-line"></span>
-    <a href="privacy.html">Privacy</a>
+  <footer class="site">
+    <div class="wrap">
+      <img src="logo.png" alt="Fleet Marshal" width="600" height="98">
+      <div class="links">
+        <span id="support-line"></span>
+        <a href="dashboard.html">Billing</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </div>
   </footer>
 
   <script src="config.js"></script>
   <script type="module">
     import { $, billing, money, setNote, supportLine } from './shared.js';
+    const small = (text) => Object.assign(document.createElement('small'), { textContent: text });
+    const bold = (text) => Object.assign(document.createElement('b'), { textContent: text });
     try {
       const p = await billing('prices');
-      $('price-sub').replaceChildren(money(p.subscription.amount, p.subscription.currency), Object.assign(document.createElement('small'), { textContent: ` / truck / ${p.subscription.interval}` }));
-      $('price-fee').replaceChildren(money(p.initiation.amount, p.initiation.currency), Object.assign(document.createElement('small'), { textContent: ' / truck, once' }));
+      $('price-sub').replaceChildren(money(p.subscription.amount, p.subscription.currency), small(` / truck / ${p.subscription.interval}`));
+      $('price-fee').replaceChildren('Plus ', bold(money(p.initiation.amount, p.initiation.currency)), ' once per truck for the tracker.');
       const line = supportLine(p.support);
       if (line) $('support-line').replaceChildren(line);
     } catch {
       $('price-sub').textContent = '—';
-      $('price-fee').textContent = '—';
       setNote($('price-note'), "Prices can't be shown right now. You'll see the exact total before you pay.", 'info');
     }
   </script>
