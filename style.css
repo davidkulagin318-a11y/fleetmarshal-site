@@ -169,3 +169,10 @@ ul.done { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
 .prose p, .prose ul { margin: 0; color: var(--dim); }
 .prose ul { padding-left: 20px; display: grid; gap: 4px; }
 .prose strong { color: var(--text); }
+
+/* Dashboard: the one obvious way from billing and setup to the app itself. */
+.open-app { background: #26593b; color: #fff; border-radius: var(--radius); padding: 18px 20px; display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; justify-content: space-between; }
+.open-app h2 { margin: 0; font-size: 19px; }
+.open-app p { margin: 4px 0 0; color: rgb(255 255 255 / 0.8); }
+.open-app a.button { background: #fff; border-color: #fff; color: #26593b; font-weight: 700; min-height: 48px; padding: 0 22px; }
+.open-app a.button:hover { background: #eef3ef; }

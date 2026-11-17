@@ -9,7 +9,7 @@
 <body>
   <header class="top">
     <a class="brand" href="index.html" data-app-name></a>
-    <nav><button id="sign-out" class="hidden">Sign out</button></nav>
+    <nav><a class="pill hidden" id="open-app-top" href="app/">Open the app</a><button id="sign-out" class="hidden">Sign out</button></nav>
   </header>
 
   <main>
@@ -38,6 +38,15 @@
     <!-- The owner's dashboard -->
     <div id="dash" class="hidden" style="display:grid;gap:16px">
       <h1 id="company-name"></h1>
+
+      <!-- The way from this page (billing and setup) to the app itself. -->
+      <section class="open-app" aria-labelledby="h-open">
+        <div>
+          <h2 id="h-open">Your map and jobs are in the app</h2>
+          <p>This page is for billing, trucks and your team.</p>
+        </div>
+        <a class="button" href="app/">Open Fleet Marshal</a>
+      </section>
 
       <section class="card" aria-labelledby="h-plan">
         <div class="row between">
@@ -121,6 +130,7 @@
         <h2 id="h-app">Get the app</h2>
         <p class="dim">You and your crew sign in to the app with your mobile numbers.</p>
         <div class="row">
+          <a class="button" href="app/">Use it in this browser</a>
           <a class="button hidden" id="ios-link">Download for iPhone</a>
           <a class="button hidden" id="android-link">Download for Android</a>
         </div>
@@ -163,6 +173,7 @@
       const { data } = await supabase.auth.getSession();
       show($('sign-in'), !data.session);
       show($('sign-out'), Boolean(data.session));
+      show($('open-app-top'), Boolean(data.session));
       show($('no-access'), false);
       show($('dash'), false);
       if (!data.session) return;
@@ -442,7 +453,7 @@
         if (done) {
           if (returned === 'added') await new Promise((r) => setTimeout(r, 2500)); // let the new truck limit land
           await render();
-          setNote($('banner'), returned === 'added' ? 'Trucks added. Your trackers are on the way.' : "You're set up. Your trackers are on the way. Add your trucks and invite your crew below.", 'good');
+          setNote($('banner'), returned === 'added' ? 'Trucks added. Your trackers are on the way.' : "You're set up. Your trackers are on the way. Name your trucks and invite your crew below, then open the app.", 'good');
           break;
         }
         await new Promise((r) => setTimeout(r, 1500));
